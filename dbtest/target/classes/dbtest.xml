@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.7.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <db:mysql-config name="MySQL_Configuration" host="127.0.0.1" port="3306" user="root" password="5354916" database="test" doc:name="MySQL Configuration"/>
+    <flow name="dbtestFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/test" doc:name="HTTP" allowedMethods="POST">
+           
+        </http:listener>
+        <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object"/>
+        <set-variable variableName="stdId" value="10" doc:name="Id"/>
+        <logger message="#[payload] " level="INFO" doc:name="Logger"/>
+        <set-variable variableName="stdName" value="tarq" doc:name="Name"/>
+        <set-variable variableName="stdPhone" value="079555555" doc:name="phone"/>
+        <set-variable variableName="stdAddress" value="kalda" doc:name="address"/>
+        <choice doc:name="Choice">
+            <when expression="#[flowVars['stdId']  &gt;5 ]">
+                <db:insert config-ref="MySQL_Configuration" doc:name="Database">
+                    <db:parameterized-query><![CDATA[INSERT INTO test.student(ID,name) VALUES (#[flowVars['stdId']],#[flowVars['stdName']]);]]></db:parameterized-query>
+                </db:insert>
+            </when>
+            <otherwise>
+                <logger message="test ok" level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+        <set-payload doc:name="Set Payload" value="#[bayload.Name]"/>
+        <logger message="#[message.payload]" level="INFO" doc:name="Logger"/>
+        <catch-exception-strategy doc:name="Catch Exception Strategy">
+            <set-payload value="#[bayload.Name]" doc:name="Set Payload"/>
+        </catch-exception-strategy>
+    </flow>
+</mule>
